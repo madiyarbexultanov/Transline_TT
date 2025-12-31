@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: shipment_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.49
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # UI
+      - "4318:4318"     # OTLP/HTTP
+    networks:
+      - backend
+
+  envoy:
+    image: envoyproxy/envoy:v1.26.0
+    container_name: envoy
+    volumes:
+      - ./config/envoy.yaml:/etc/envoy/envoy.yaml:ro
+    networks:
+      - backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - shipment-service
+      - customer-service
+
+  customer-service:
+    build:
+      context: .
+      dockerfile: cmd/customer-service/Dockerfile
+    environment:
+      DATABASE_URL: postgres://user:password@postgres:5432/shipment_db?sslmode=disable
+    networks:
+      - backend
+    depends_on:
+      - postgres
+
+  shipment-service:
+    build:
+      context: .
+      dockerfile: cmd/customer-service/Dockerfile
+    environment:
+      DATABASE_URL: postgres://user:password@postgres:5432/shipment_db?sslmode=disable
+      CUSTOMER_GRPC_ADDR: customer-service:9090
+    networks:
+      - backend
+    depends_on:
+      - customer-service
+      - postgres
+    # REST порт внутри сети, Envoy будет проксировать
+    # ports: []
+
+volumes:
+  pgdata:
+
+networks:
+  backend:
+    driver: bridge
