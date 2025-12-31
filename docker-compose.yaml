@@ -49,7 +49,7 @@ services:
   shipment-service:
     build:
       context: .
-      dockerfile: cmd/customer-service/Dockerfile
+      dockerfile: cmd/shipment-service/Dockerfile
     environment:
       DATABASE_URL: postgres://user:password@postgres:5432/shipment_db?sslmode=disable
       CUSTOMER_GRPC_ADDR: customer-service:9090
