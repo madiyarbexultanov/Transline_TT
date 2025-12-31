@@ -18,7 +18,7 @@ services:
       COLLECTOR_OTLP_ENABLED: "true"
     ports:
       - "16686:16686"   # UI
-      - "4318:4318"     # OTLP/HTTP
+      - "4317:4317"     
     networks:
       - backend
 

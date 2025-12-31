@@ -12,7 +12,11 @@ import (
 )
 
 func Init(serviceName string) (func(context.Context) error, error) {
-	exp, err := otlptracegrpc.New(context.Background())
+	exp, err := otlptracegrpc.New(
+    context.Background(),
+    otlptracegrpc.WithEndpoint("jaeger:4317"), // имя контейнера Jaeger в сети Docker
+    otlptracegrpc.WithInsecure(),
+)
 	if err != nil {
 		return nil, err
 	}
@@ -20,7 +24,7 @@ func Init(serviceName string) (func(context.Context) error, error) {
 	res, err := resource.New(
 		context.Background(),
 		resource.WithAttributes(
-			semconv.ServiceName(serviceName),
+			semconv.ServiceNameKey.String(serviceName),
 		),
 	)
 	if err != nil {
